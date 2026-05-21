@@ -2,23 +2,116 @@
 
 ## Overview
 
-This project focuses on underwater ship classification using spectrogram representations generated from raw `.wav` audio recordings. The workflow converts underwater acoustic signals into image-based spectrograms and trains multiple deep learning models to classify different vessel and noise types.
+This project focuses on underwater acoustic ship classification using spectrogram representations generated from raw `.wav` audio recordings. The workflow converts underwater audio into spectrogram images and trains multiple deep learning models to classify different vessel and noise types.
 
-The project explores:
+The notebook includes:
 
-* Spectrogram generation from underwater acoustic recordings
-* CNN and Vision Transformer (ViT) classification models
-* Variational Autoencoder (VAE) data augmentation
+* Spectrogram generation from `.wav` files
+* EfficientNet and Vision Transformer classification
+* VAE-based augmentation
 * Diffusion-based spectrogram generation
-* Model comparison using classification metrics and confusion matrices
+* Model comparison and evaluation
 
-The notebook was developed and tested in Google Colab using PyTorch and torchvision.
+The project was developed and tested primarily in Google Colab using PyTorch.
 
 ---
 
-# Dataset
+# Dataset Access
 
-The dataset consists of underwater acoustic recordings from four different classes:
+The dataset files are too large to upload directly to GitHub.
+
+Download the dataset zip files here:
+
+[Google Drive Dataset Folder](https://drive.google.com/drive/folders/1aV_n8aEMuKqn92XevdWePbSL4pgiNd9J?usp=drive_link)
+
+After downloading, upload the zip files into your own Google Drive before running the notebook.
+
+---
+
+# Expected Dataset Structure
+
+The notebook expects the dataset zip files to be available in Google Drive.
+
+Example structure:
+
+```text
+MyDrive/
+└── ShipClassificationDataset/
+    ├── kai.zip
+    ├── noise.zip
+    ├── uuv.zip
+    └── speedboat.zip
+```
+
+---
+
+# Updating Dataset Paths
+
+Inside the notebook, update the zip file paths to match your Google Drive folder location.
+
+Locate the dataset extraction section and modify the paths similar to this:
+
+```python
+kai_zip = "/content/drive/MyDrive/ShipClassificationDataset/kai.zip"
+noise_zip = "/content/drive/MyDrive/ShipClassificationDataset/noise.zip"
+uuv_zip = "/content/drive/MyDrive/ShipClassificationDataset/uuv.zip"
+speedboat_zip = "/content/drive/MyDrive/ShipClassificationDataset/speedboat.zip"
+```
+
+If your dataset folder has a different name or location, update the paths accordingly.
+
+---
+
+# Running the Notebook
+
+## Recommended Environment
+
+Google Colab is recommended because the notebook was developed and tested there with GPU acceleration enabled.
+
+---
+
+## Setup Steps
+
+### 1. Mount Google Drive
+
+Run the Google Drive mount cell:
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+```
+
+---
+
+### 2. Upload Dataset Files
+
+Upload all dataset zip files into your chosen Google Drive folder.
+
+---
+
+### 3. Update Dataset Paths
+
+Modify the dataset zip paths in the notebook to match your Google Drive folder structure.
+
+---
+
+### 4. Run Notebook Cells Sequentially
+
+Run the notebook from top to bottom:
+
+1. Dataset extraction
+2. Spectrogram generation
+3. Dataset splitting
+4. Model training
+5. VAE augmentation
+6. Diffusion augmentation
+7. Evaluation and visualization
+
+---
+
+# Dataset Classes
+
+The dataset contains four classes:
 
 | Class | Description      |
 | ----- | ---------------- |
@@ -27,75 +120,26 @@ The dataset consists of underwater acoustic recordings from four different class
 | 3     | UUV              |
 | 4     | Speedboat        |
 
-Audio recordings are stored as `.wav` files and later converted into spectrogram images for model training.
-
 ---
 
-# Project Workflow
+# Spectrogram Generation
 
-## 1. Audio Loading and Extraction
-
-The notebook begins by mounting Google Drive and loading compressed dataset archives.
-
-Zip files are extracted into separate folders for each class:
-
-* `kai`
-* `noise`
-* `uuv`
-* `speedboat`
-
-Folder validation is also performed to verify that all files are loaded correctly before preprocessing begins.
-
----
-
-## 2. Spectrogram Generation
-
-A reusable spectrogram generation function is implemented using:
+The notebook converts raw audio recordings into spectrogram images using:
 
 * `scipy.signal.spectrogram`
 * `numpy`
 * `matplotlib`
-* `PIL`
 
-The generated spectrograms are saved as image files for later use during model training.
+Generated spectrograms are saved into separate class directories for training.
 
 ### Spectrogram Parameters
 
-| Parameter         | Value   |
-| ----------------- | ------- |
-| Window Size       | 1024    |
-| Overlap           | 800     |
-| FFT Size          | 4096    |
-| Minimum Frequency | 10 Hz   |
-| Maximum Frequency | 2500 Hz |
-
-Each class receives its own spectrogram output directory:
-
-* `kai_spectrograms`
-* `noise_spectrograms`
-* `uuv_spectrograms`
-* `speedboat_spectrograms`
-
-The notebook also visualizes example spectrograms from each class to verify preprocessing quality.
-
----
-
-# Data Preparation
-
-The spectrogram dataset is split into:
-
-* Training set
-* Validation set
-
-Folder structures are automatically created and organized using class labels compatible with `torchvision.datasets.ImageFolder`.
-
-Image transformations include:
-
-* Resize to 224x224
-* Tensor conversion
-* Normalization
-
-Separate transforms are also defined for VAE training.
+| Parameter       | Value           |
+| --------------- | --------------- |
+| Window Size     | 1024            |
+| Overlap         | 800             |
+| FFT Size        | 4096            |
+| Frequency Range | 10 Hz – 2500 Hz |
 
 ---
 
@@ -103,50 +147,37 @@ Separate transforms are also defined for VAE training.
 
 ## EfficientNet-B0
 
-A CNN-based classifier built using the pretrained `EfficientNet-B0` architecture from torchvision.
+A pretrained EfficientNet-B0 CNN model is used for spectrogram classification.
 
-The final classification layer is modified to output predictions for four classes.
-
-### Why EfficientNet?
-
-EfficientNet provides:
-
-* Strong image classification performance
-* Lower computational cost compared to larger CNNs
-* Good generalization on spectrogram-based datasets
+The final classification layer is modified for four output classes.
 
 ---
 
 ## Vision Transformer (ViT)
 
-A Vision Transformer classifier is also implemented using torchvision pretrained weights.
-
-The final classification head is replaced to support the four target classes.
-
-### Why ViT?
-
-ViT models are useful for evaluating transformer-based image classification performance compared to traditional CNN architectures.
+A pretrained Vision Transformer model is also implemented to compare transformer-based image classification performance against CNNs.
 
 ---
 
-# Training Pipeline
+# Data Augmentation
 
-A reusable training function is implemented to:
+## Variational Autoencoder (VAE)
 
-* Train models across multiple epochs
-* Compute validation metrics
-* Store predictions and labels
-* Generate evaluation outputs
+A conditional VAE is used to generate synthetic spectrogram images for each class.
 
-The following metrics are calculated:
+Generated samples are combined with the original dataset for additional training experiments.
 
-* Accuracy
-* Precision
-* Recall
+---
 
-Confusion matrices are also generated for performance analysis.
+## Diffusion Model
 
-### Training Hyperparameters
+A simplified U-Net style diffusion model is also implemented to generate synthetic spectrograms.
+
+These generated samples are used for additional augmentation experiments and model evaluation.
+
+---
+
+# Training Configuration
 
 | Parameter         | Value |
 | ----------------- | ----- |
@@ -155,78 +186,22 @@ Confusion matrices are also generated for performance analysis.
 | Learning Rate     | 0.001 |
 | Number of Classes | 4     |
 
-GPU acceleration is automatically enabled when CUDA is available.
+CUDA is automatically enabled when available.
 
 ---
 
-# Variational Autoencoder (VAE)
-
-A conditional Variational Autoencoder is implemented to generate synthetic spectrogram images.
-
-The VAE uses:
-
-* Encoder-decoder architecture
-* Latent vector sampling
-* Class embeddings for conditional generation
-
-Synthetic images are generated for each class and saved into:
-
-`/content/augmented_spectrograms`
-
-The augmented dataset is then combined with the original training data using `ConcatDataset`.
-
----
-
-# Diffusion Model
-
-A simplified U-Net style diffusion generator is also implemented.
-
-The diffusion model is trained to generate additional synthetic spectrograms for each class.
-
-Generated outputs are saved into:
-
-`/content/diffusion_augmented_spectrograms`
-
-These generated samples are later merged with the original dataset for additional training experiments.
-
----
-
-# Augmentation Experiments
-
-The notebook evaluates multiple training scenarios:
-
-| Experiment          | Description                                     |
-| ------------------- | ----------------------------------------------- |
-| Original Dataset    | Training using only original spectrograms       |
-| VAE Augmented       | Training using VAE-generated spectrograms       |
-| Diffusion Augmented | Training using diffusion-generated spectrograms |
-
-Both EfficientNet and ViT are evaluated under each augmentation strategy.
-
----
-
-# Results and Observations
-
-## General Findings
-
-* EfficientNet consistently produced the strongest overall performance.
-* ViT performance improved with augmentation but remained less stable than EfficientNet.
-* VAE augmentation helped increase dataset diversity, but generated samples occasionally introduced noise artifacts.
-* Diffusion-generated spectrograms produced more realistic samples compared to the VAE outputs.
-
----
-
-# Evaluation Outputs
+# Evaluation
 
 The notebook includes:
 
-* Classification metrics
+* Accuracy
+* Precision
+* Recall
 * Confusion matrices
 * Spectrogram visualizations
 * Synthetic image visualizations
-* Model comparison summaries
 
-These outputs are used to compare:
+The goal was to compare:
 
 * CNN vs Transformer performance
 * Original vs augmented datasets
@@ -234,9 +209,7 @@ These outputs are used to compare:
 
 ---
 
-# Libraries and Frameworks
-
-## Core Libraries
+# Libraries Used
 
 * Python
 * PyTorch
@@ -247,26 +220,15 @@ These outputs are used to compare:
 * PIL
 * scikit-learn
 
-## Environment
-
-The notebook was primarily designed for:
-
-* Google Colab
-* CUDA-enabled GPU execution
-
 ---
 
 # File Structure
 
-Example folder structure:
-
 ```text
 project/
 │
-├── kai/
-├── noise/
-├── uuv/
-├── speedboat/
+├── Ship_Classification.ipynb
+├── README.md
 │
 ├── kai_spectrograms/
 ├── noise_spectrograms/
@@ -274,62 +236,13 @@ project/
 ├── speedboat_spectrograms/
 │
 ├── augmented_spectrograms/
-├── diffusion_augmented_spectrograms/
-│
-└── Ship_Classification.ipynb
+└── diffusion_augmented_spectrograms/
 ```
-
----
-
-# Running the Notebook
-
-## Recommended Environment
-
-Google Colab is recommended due to:
-
-* GPU support
-* Google Drive integration
-* Faster training performance
-
-## Steps
-
-1. Upload dataset zip files to Google Drive.
-2. Update dataset paths in the notebook if necessary.
-3. Run cells sequentially:
-
-   * Dataset extraction
-   * Spectrogram generation
-   * Dataset splitting
-   * Model training
-   * Augmentation experiments
-   * Evaluation
-
----
-
-# Future Improvements
-
-Potential future improvements for this project include:
-
-* Longer model training
-* Hyperparameter optimization
-* Advanced diffusion architectures
-* Additional transformer variants
-* Real-time ship detection pipelines
-* Improved synthetic sample quality
 
 ---
 
 # Summary
 
-This project demonstrates a complete deep learning pipeline for underwater acoustic ship classification using spectrogram-based image representations.
+This project builds a complete deep learning pipeline for underwater ship classification using spectrogram-based image representations.
 
-The notebook combines:
-
-* Signal preprocessing
-* Computer vision techniques
-* CNN and Transformer models
-* Generative augmentation methods
-* Classification evaluation
-
-The experiments show that EfficientNet performs strongly on spectrogram classification tasks, while synthetic data augmentation using VAEs and diffusion models can improve dataset diversity and help support model training.
-
+The notebook combines signal preprocessing, computer vision models, and generative augmentation methods to evaluate different approaches for underwater acoustic classification tasks.
